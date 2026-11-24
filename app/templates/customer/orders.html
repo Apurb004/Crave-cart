@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}My Order History – CraveCart{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <span class="badge badge-accent" style="margin-bottom: 0.5rem;">Account Portal</span>
+  <h1 style="font-size: 2.3rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 0.5rem;">
+    Your Order History
+  </h1>
+  <p style="color: var(--color-text-muted);">
+    Track real-time fulfillment and review your previous dining receipts.
+  </p>
+</div>
+
+{% if orders %}
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    {% for order in orders %}
+      <div class="card" style="padding: 1.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1.25rem; margin-bottom: 1.25rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+              <span style="font-size: 1.25rem; font-weight: 800; color: var(--color-primary-dark);">
+                {{ order.order_number or ('CRV-%04d'|format(order.id)) }}
+              </span>
+              {% set s = order.status|upper %}
+              {% if s == 'PLACED' %}
+                <span class="badge badge-status-placed">Placed</span>
+              {% elif s == 'CONFIRMED' %}
+                <span class="badge badge-status-confirmed">Confirmed</span>
+              {% elif s == 'PREPARING' %}
+                <span class="badge badge-status-preparing">Preparing</span>
+              {% elif s == 'OUT FOR DELIVERY' %}
+                <span class="badge badge-status-out-for-delivery">Out for Delivery</span>
+              {% elif s == 'DELIVERED' %}
+                <span class="badge badge-status-delivered">Delivered</span>
+              {% elif s == 'CANCELLED' %}
+                <span class="badge badge-status-cancelled">Cancelled</span>
+              {% else %}
+                <span class="badge badge-accent">{{ order.status }}</span>
+              {% endif %}
+            </div>
+            <div style="font-size: 0.88rem; color: var(--color-text-muted);">
+              Placed on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }} &bull; Cash on Delivery
+            </div>
+          </div>
+
+          <div style="text-align: right;">
+            <div style="font-size: 1.45rem; font-weight: 800; color: var(--color-accent);">
+              ${{ "%.2f"|format(order.total_amount) }}
+            </div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">
+              {{ order.items|length }} {{ 'item' if order.items|length == 1 else 'items' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Items Snapshot -->
+        <div style="margin-bottom: 1.25rem;">
+          <div style="font-size: 0.95rem; color: var(--color-text-dark); line-height: 1.6;">
+            {% for item in order.items %}
+              <span style="font-weight: 600;">{{ item.quantity }}x</span> {{ item.item_name }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.35rem;">
+            Destination: {{ order.delivery_address }}
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; border-top: 1px solid var(--color-border); padding-top: 1rem;">
+          <a href="{{ url_for('customer.order_detail', order_id=order.id) }}" class="btn btn-outline btn-sm" style="font-weight: 700;">
+            View Receipt &amp; Live Tracking &rarr;
+          </a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card" style="text-align: center; padding: 4.5rem 2rem; max-width: 560px; margin: 2rem auto;">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">📦</div>
+    <h2 style="font-size: 1.6rem; color: var(--color-primary-dark); margin-bottom: 0.6rem; font-weight: 800;">
+      No orders placed yet
+    </h2>
+    <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-size: 0.98rem;">
+      When you order our delicious artisanal dishes, your orders and real-time courier timeline will appear here.
+    </p>
+    <a href="{{ url_for('customer.menu') }}" class="btn btn-accent btn-lg">
+      Browse Dining Menu &rarr;
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

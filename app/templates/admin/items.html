@@ -1,0 +1,130 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Food Inventory{% endblock %}
+{% block header_title %}Menu Catalog &amp; Food Inventory{% endblock %}
+
+{% block content %}
+<!-- Top Header & Actions -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h3 style="font-size: 1.35rem; color: var(--color-primary-dark); font-weight: 800; margin: 0;">
+      All Food Dishes ({{ items|length }})
+    </h3>
+    <span style="font-size: 0.88rem; color: var(--color-text-muted);">
+      Manage active menu items, pricing, photography, and instant stock availability.
+    </span>
+  </div>
+
+  <a href="{{ url_for('admin.item_create') }}" class="btn btn-primary btn-lg">
+    + Add New Dish
+  </a>
+</div>
+
+<!-- Search and Category Filters -->
+<div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+  <form method="GET" action="{{ url_for('admin.items') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+    <div style="flex: 1; min-width: 240px;">
+      <input type="text" name="q" value="{{ search_query }}" placeholder="Search dishes by name or description..." class="form-control" style="margin: 0;">
+    </div>
+
+    <div style="width: 220px;">
+      <select name="category" class="form-control" style="margin: 0;" onchange="this.form.submit();">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if selected_category_id == cat.id %}selected{% endif %}>
+            {{ cat.name }} ({{ cat.food_items|length }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-outline" style="white-space: nowrap;">
+      Filter
+    </button>
+
+    {% if search_query or selected_category_id %}
+      <a href="{{ url_for('admin.items') }}" class="btn btn-outline" style="white-space: nowrap;">
+        Reset
+      </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Dishes Inventory Table -->
+<div class="admin-table-container">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th style="width: 80px;">Image</th>
+        <th>Dish Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th style="text-align: center;">Stock Status</th>
+        <th style="text-align: right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if items %}
+        {% for dish in items %}
+          <tr>
+            <td>
+              <img src="{{ dish.image_url or url_for('static', filename='images/food-placeholder.svg') }}" 
+                   alt="{{ dish.name }}" 
+                   style="width: 54px; height: 54px; object-fit: cover; border-radius: var(--radius-sm); background-color: var(--color-surface-elevated);"
+                   onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/food-placeholder.svg') }}';">
+            </td>
+            <td>
+              <div style="font-weight: 700; color: var(--color-primary-dark); font-size: 1rem;">
+                {{ dish.name }}
+              </div>
+              <div style="font-size: 0.8rem; color: var(--color-text-muted); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ dish.description or 'No description provided.' }}
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-accent">
+                {{ dish.category.name if dish.category else 'Unassigned' }}
+              </span>
+            </td>
+            <td style="font-weight: 800; color: var(--color-accent); font-size: 1.05rem;">
+              ${{ "%.2f"|format(dish.price) }}
+            </td>
+            <td style="text-align: center;">
+              <!-- Quick Stock Availability Toggle -->
+              <form action="{{ url_for('admin.item_toggle_stock', item_id=dish.id) }}" method="POST" style="margin: 0; display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if dish.is_available %}
+                  <button type="submit" class="badge badge-in-stock" style="border: none; cursor: pointer;" title="Click to mark as Out of Stock">
+                    ● In Stock (Click to toggle)
+                  </button>
+                {% else %}
+                  <button type="submit" class="badge badge-out-of-stock" style="border: none; cursor: pointer;" title="Click to mark as In Stock">
+                    ✕ Out of Stock (Click to toggle)
+                  </button>
+                {% endif %}
+              </form>
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <a href="{{ url_for('admin.item_edit', item_id=dish.id) }}" class="btn btn-sm btn-outline" style="padding: 0.35rem 0.65rem;">
+                Edit
+              </a>
+              <form action="{{ url_for('admin.item_delete', item_id=dish.id) }}" method="POST" style="display: inline; margin-left: 0.35rem;" onsubmit="return confirm('Are you sure you want to delete dish &quot;{{ dish.name }}&quot;?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline" style="color: #D32F2F; border-color: transparent; padding: 0.35rem 0.65rem;">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
+            No food items matched your query.
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

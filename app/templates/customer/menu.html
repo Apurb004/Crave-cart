@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% from 'components/_food_card.html' import render_food_card %}
+
+{% block title %}Menu Catalog – CraveCart{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <span class="badge badge-accent" style="margin-bottom: 0.5rem;">CraveCart Kitchen</span>
+  <h1 style="font-size: 2.4rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.5px;">
+    Our Culinary Menu
+  </h1>
+  <p style="color: var(--color-text-muted); font-size: 1.05rem; max-width: 700px;">
+    Every dish is prepared using genuine farm-fresh ingredients and signature recipes. Filter by category or search your favorite flavors below.
+  </p>
+</div>
+
+<!-- Search Bar & Filters -->
+<div class="search-bar-wrapper">
+  <form method="GET" action="{{ url_for('customer.menu') }}" class="search-form">
+    {% if selected_category_id %}
+      <input type="hidden" name="category" value="{{ selected_category_id }}">
+    {% endif %}
+    <input type="text" 
+           name="q" 
+           value="{{ search_query }}" 
+           placeholder="Search dishes by name or description (e.g. Pasta, Burger, Truffle)..." 
+           class="search-input"
+           aria-label="Search dishes">
+    <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <span>Search</span>
+    </button>
+    {% if search_query or selected_category_id %}
+      <a href="{{ url_for('customer.menu') }}" class="btn btn-outline" style="white-space: nowrap;">
+        Reset
+      </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Category Filter Pills -->
+<div class="category-tabs" aria-label="Category Filters">
+  <a href="{{ url_for('customer.menu', q=search_query if search_query else None) }}" 
+     class="category-tab {% if not selected_category_id %}active{% endif %}">
+    All Categories
+  </a>
+  {% for cat in categories %}
+    <a href="{{ url_for('customer.menu', category=cat.id, q=search_query if search_query else None) }}" 
+       class="category-tab {% if selected_category_id == cat.id %}active{% endif %}">
+      {{ cat.name }}
+    </a>
+  {% endfor %}
+</div>
+
+<!-- Results Header -->
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem;">
+  <span style="font-size: 0.95rem; font-weight: 600; color: var(--color-text-muted);">
+    Showing {{ items|length }} {{ 'dish' if items|length == 1 else 'dishes' }}
+    {% if search_query %} matching "<em>{{ search_query }}</em>"{% endif %}
+  </span>
+</div>
+
+<!-- Menu Catalog Grid -->
+{% if items %}
+  <div class="food-grid">
+    {% for item in items %}
+      {{ render_food_card(item) }}
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card" style="text-align: center; padding: 4rem 2rem; margin-top: 1.5rem;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+    <h3 style="color: var(--color-primary-dark); font-size: 1.4rem; margin-bottom: 0.5rem;">No matching dishes found</h3>
+    <p style="color: var(--color-text-muted); max-width: 480px; margin: 0 auto 1.5rem auto;">
+      We couldn't find any items matching your criteria. Try adjusting your keyword search or selecting another category.
+    </p>
+    <a href="{{ url_for('customer.menu') }}" class="btn btn-primary">
+      Clear Filters & Show All
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

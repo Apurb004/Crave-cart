@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Dining Cart – CraveCart{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <span class="badge badge-accent" style="margin-bottom: 0.5rem;">Order Review</span>
+  <h1 style="font-size: 2.3rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 0.5rem;">
+    Your Dining Cart
+  </h1>
+  <p style="color: var(--color-text-muted);">
+    Review your selected artisanal dishes. Quantities can be adjusted and prices are verified against active kitchen records.
+  </p>
+</div>
+
+{% if cart_items %}
+  {% if has_unavailable %}
+    <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+      <span>
+        <strong>Notice:</strong> One or more dishes in your cart are currently sold out. Please remove the unavailable dishes to proceed with checkout.
+      </span>
+    </div>
+  {% endif %}
+
+  <div class="cart-layout">
+    <!-- Items Table Container -->
+    <div class="card" style="padding: 1.5rem;">
+      <div class="cart-table-wrapper">
+        <table class="cart-table">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--color-border); color: var(--color-text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <th style="padding: 0.75rem 0.5rem;">Dish</th>
+              <th style="padding: 0.75rem 0.5rem; text-align: center;">Price</th>
+              <th style="padding: 0.75rem 0.5rem; text-align: center;">Quantity</th>
+              <th style="padding: 0.75rem 0.5rem; text-align: right;">Subtotal</th>
+              <th style="padding: 0.75rem 0.5rem; text-align: center;">Remove</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for entry in cart_items %}
+            <tr style="border-bottom: 1px solid var(--color-border); {% if not entry.is_available %}background-color: #FFFDFD; opacity: 0.75;{% endif %}">
+              <td style="padding: 1rem 0.5rem; display: flex; align-items: center; gap: 1rem;">
+                <img src="{{ entry.item.image_url or url_for('static', filename='images/food-placeholder.svg') }}" 
+                     alt="{{ entry.item.name }}" 
+                     style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-sm); background-color: var(--color-surface-elevated);"
+                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/food-placeholder.svg') }}';">
+                <div>
+                  <a href="{{ url_for('customer.food_detail', item_id=entry.item.id) }}" style="font-weight: 700; color: var(--color-primary-dark); font-size: 0.98rem;">
+                    {{ entry.item.name }}
+                  </a>
+                  <div style="font-size: 0.8rem; color: var(--color-text-muted);">
+                    {{ entry.item.category.name if entry.item.category else 'Chef Special' }}
+                  </div>
+                  {% if not entry.is_available %}
+                    <span class="badge badge-out-of-stock" style="margin-top: 0.25rem;">Sold Out</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td style="padding: 1rem 0.5rem; text-align: center; font-weight: 600;">
+                ${{ "%.2f"|format(entry.unit_price) }}
+              </td>
+              <td style="padding: 1rem 0.5rem; text-align: center;">
+                <div style="display: inline-flex; align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background-color: var(--color-surface-white);">
+                  <!-- Decrease button -->
+                  <form action="{{ url_for('customer.update_cart_item', item_id=entry.item_id) }}" method="POST" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="decrease">
+                    <button type="submit" class="quantity-btn" style="padding: 0.35rem 0.65rem;" title="Decrease quantity" aria-label="Decrease quantity">&minus;</button>
+                  </form>
+
+                  <span style="min-width: 28px; text-align: center; font-weight: 700; font-size: 0.95rem;">
+                    {{ entry.quantity }}
+                  </span>
+
+                  <!-- Increase button -->
+                  <form action="{{ url_for('customer.update_cart_item', item_id=entry.item_id) }}" method="POST" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="increase">
+                    <button type="submit" class="quantity-btn" style="padding: 0.35rem 0.65rem;" title="Increase quantity" aria-label="Increase quantity" {% if not entry.is_available %}disabled{% endif %}>&plus;</button>
+                  </form>
+                </div>
+              </td>
+              <td style="padding: 1rem 0.5rem; text-align: right; font-weight: 800; color: var(--color-accent); font-size: 1.05rem;">
+                ${{ "%.2f"|format(entry.subtotal) }}
+              </td>
+              <td style="padding: 1rem 0.5rem; text-align: center;">
+                <form action="{{ url_for('customer.remove_cart_item', item_id=entry.item_id) }}" method="POST" style="margin: 0;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline" style="color: #D32F2F; border-color: transparent; padding: 0.35rem 0.6rem;" title="Remove item" aria-label="Remove item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bottom Cart Action Bar -->
+      <div style="margin-top: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-top: 1px solid var(--color-border); padding-top: 1.25rem;">
+        <a href="{{ url_for('customer.menu') }}" class="btn btn-outline">
+          &larr; Add More Dishes
+        </a>
+        <form action="{{ url_for('customer.clear_cart') }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to clear your entire cart?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline" style="color: var(--color-text-muted);">
+            Clear Entire Cart
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order Summary Column -->
+    <div class="card" style="padding: 1.75rem;">
+      <h3 style="font-size: 1.3rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 1.25rem;">
+        Order Summary
+      </h3>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; color: var(--color-text-muted); font-size: 0.95rem;">
+        <span>Total Items</span>
+        <span style="font-weight: 700; color: var(--color-text-dark);">{{ total_quantity }}</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; color: var(--color-text-muted); font-size: 0.95rem;">
+        <span>Payment Method</span>
+        <span style="font-weight: 700; color: var(--color-primary-dark);">Cash on Delivery</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 1.25rem; color: var(--color-text-muted); font-size: 0.95rem;">
+        <span>Delivery Fee</span>
+        <span style="font-weight: 700; color: #2E7D32;">FREE</span>
+      </div>
+
+      <div style="border-top: 2px solid var(--color-border); padding-top: 1.25rem; margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: baseline;">
+        <span style="font-size: 1.1rem; font-weight: 800; color: var(--color-primary-dark);">Final Payable Total</span>
+        <span style="font-size: 1.75rem; font-weight: 800; color: var(--color-accent);">${{ "%.2f"|format(total_amount) }}</span>
+      </div>
+
+      {% if has_unavailable %}
+        <button class="btn btn-accent btn-block btn-lg" disabled style="cursor: not-allowed; opacity: 0.65;">
+          Remove Sold Out Items to Checkout
+        </button>
+      {% else %}
+        <a href="{{ url_for('customer.checkout') }}" class="btn btn-accent btn-block btn-lg">
+          Proceed to Checkout &rarr;
+        </a>
+      {% endif %}
+
+      <div style="margin-top: 1.25rem; text-align: center; font-size: 0.82rem; color: var(--color-text-muted); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+          <line x1="1" y1="10" x2="23" y2="10"></line>
+        </svg>
+        <span>No credit card needed &bull; Pay with cash at your door</span>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <!-- Empty Cart State -->
+  <div class="card" style="text-align: center; padding: 4.5rem 2rem; max-width: 560px; margin: 2rem auto;">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">🍽️</div>
+    <h2 style="font-size: 1.6rem; color: var(--color-primary-dark); margin-bottom: 0.6rem; font-weight: 800;">
+      Your cart is currently empty
+    </h2>
+    <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-size: 0.98rem; max-width: 440px; margin-left: auto; margin-right: auto;">
+      You haven't added any dishes yet. Browse our handcrafted culinary menu to select fresh appetizers, mains, and desserts!
+    </p>
+    <a href="{{ url_for('customer.menu') }}" class="btn btn-accent btn-lg">
+      Explore Dining Menu &rarr;
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

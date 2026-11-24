@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="creamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF6EE"/>
+      <stop offset="100%" stop-color="#F3ECE0"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9532F"/>
+      <stop offset="100%" stop-color="#BF4422"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Plate Surface -->
+  <rect width="400" height="300" fill="url(#creamGrad)"/>
+  
+  <!-- Circular Plate Rim -->
+  <circle cx="200" cy="140" r="95" fill="#FFFFFF" stroke="#E8E2D5" stroke-width="4"/>
+  <circle cx="200" cy="140" r="75" fill="#FAF6EE" stroke="#E8E2D5" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- Gourmet Cloche / Dish Icon -->
+  <path d="M 140 155 Q 200 80 260 155 Z" fill="url(#accentGrad)" opacity="0.9"/>
+  <!-- Cloche Handle -->
+  <circle cx="200" cy="100" r="8" fill="#163829"/>
+  <!-- Dish Rim -->
+  <rect x="130" y="153" width="140" height="8" rx="4" fill="#163829"/>
+  
+  <!-- Steam Whispers -->
+  <path d="M 185 85 Q 180 75 185 65" stroke="#D9532F" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 200 82 Q 205 72 200 62" stroke="#163829" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 215 85 Q 220 75 215 65" stroke="#D9532F" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Label -->
+  <text x="200" y="215" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" fill="#163829" letter-spacing="1.5">CRAVECART SPECIALTY</text>
+  <text x="200" y="235" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#5C6962">Freshly Cooked To Order</text>
+</svg>

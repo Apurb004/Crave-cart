@@ -1,0 +1,198 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block header_title %}Operations Dashboard &amp; Analytics{% endblock %}
+
+{% block content %}
+<!-- Top Metric Summary Cards -->
+<div class="stat-grid">
+  <!-- Total Orders -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper" style="background-color: var(--color-primary-light); color: var(--color-primary-dark);">
+      📦
+    </div>
+    <div>
+      <div class="stat-value">{{ total_orders }}</div>
+      <div class="stat-label">Total Orders</div>
+    </div>
+  </div>
+
+  <!-- Delivered Revenue -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper" style="background-color: #E8F5E9; color: #2E7D32;">
+      💵
+    </div>
+    <div>
+      <div class="stat-value" style="color: #2E7D32;">${{ "%.2f"|format(total_revenue) }}</div>
+      <div class="stat-label">Delivered Revenue</div>
+    </div>
+  </div>
+
+  <!-- Registered Customers -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper" style="background-color: #E3F2FD; color: #1565C0;">
+      👥
+    </div>
+    <div>
+      <div class="stat-value">{{ total_customers }}</div>
+      <div class="stat-label">Active Customers</div>
+    </div>
+  </div>
+
+  <!-- Food Items -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper" style="background-color: var(--color-accent-subtle); color: var(--color-accent);">
+      🍽️
+    </div>
+    <div>
+      <div class="stat-value">{{ total_food_items }}</div>
+      <div class="stat-label">Menu Dishes</div>
+    </div>
+  </div>
+</div>
+
+<!-- Fulfillment Status Summary Breakdown -->
+<div style="margin-bottom: 2rem;">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.85rem;">
+    <h3 style="font-size: 1.15rem; color: var(--color-primary-dark); font-weight: 800;">
+      Order Status Breakdown
+    </h3>
+    <span style="font-size: 0.88rem; color: var(--color-text-muted); font-weight: 600;">
+      {{ active_orders_count }} Active in Kitchen/Transit
+    </span>
+  </div>
+
+  <div class="status-pills-bar">
+    <a href="{{ url_for('admin.orders') }}" class="status-pill-btn">
+      <span>All Orders</span>
+      <span class="pill-counter">{{ total_orders }}</span>
+    </a>
+    <a href="{{ url_for('admin.orders', status='PLACED') }}" class="status-pill-btn">
+      <span style="color: #E65100;">Placed</span>
+      <span class="pill-counter">{{ status_counts['PLACED'] }}</span>
+    </a>
+    <a href="{{ url_for('admin.orders', status='CONFIRMED') }}" class="status-pill-btn">
+      <span style="color: #0D47A1;">Confirmed</span>
+      <span class="pill-counter">{{ status_counts['CONFIRMED'] }}</span>
+    </a>
+    <a href="{{ url_for('admin.orders', status='PREPARING') }}" class="status-pill-btn">
+      <span style="color: #4A148C;">Preparing</span>
+      <span class="pill-counter">{{ status_counts['PREPARING'] }}</span>
+    </a>
+    <a href="{{ url_for('admin.orders', status='OUT FOR DELIVERY') }}" class="status-pill-btn">
+      <span style="color: #BF360C;">Out for Delivery</span>
+      <span class="pill-counter">{{ status_counts['OUT FOR DELIVERY'] }}</span>
+    </a>
+    <a href="{{ url_for('admin.orders', status='DELIVERED') }}" class="status-pill-btn">
+      <span style="color: #1B5E20;">Delivered</span>
+      <span class="pill-counter">{{ status_counts['DELIVERED'] }}</span>
+    </a>
+    <a href="{{ url_for('admin.orders', status='CANCELLED') }}" class="status-pill-btn">
+      <span style="color: #B71C1C;">Cancelled</span>
+      <span class="pill-counter">{{ status_counts['CANCELLED'] }}</span>
+    </a>
+  </div>
+</div>
+
+<!-- Quick Action Shortcuts -->
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+  <a href="{{ url_for('admin.item_create') }}" class="btn btn-primary">
+    + Add New Dish
+  </a>
+  <a href="{{ url_for('admin.categories') }}" class="btn btn-outline">
+    Manage Categories
+  </a>
+  <a href="{{ url_for('admin.orders') }}" class="btn btn-outline">
+    View All Orders &rarr;
+  </a>
+</div>
+
+<!-- Recent Orders Section -->
+<div style="margin-top: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem;">
+    <h3 style="font-size: 1.25rem; color: var(--color-primary-dark); font-weight: 800;">
+      Recent Customer Orders
+    </h3>
+    <a href="{{ url_for('admin.orders') }}" style="font-size: 0.9rem; font-weight: 700; color: var(--color-accent);">
+      View Full Orders Feed &rarr;
+    </a>
+  </div>
+
+  <div class="admin-table-container">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Date &amp; Time</th>
+          <th>Customer</th>
+          <th>Dishes</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_orders %}
+          {% for order in recent_orders %}
+            <tr>
+              <td>
+                <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" style="font-weight: 800; color: var(--color-primary-dark);">
+                  {{ order.order_number or ('#%d'|format(order.id)) }}
+                </a>
+              </td>
+              <td style="color: var(--color-text-muted); font-size: 0.88rem;">
+                {{ order.created_at.strftime('%b %d, %I:%M %p') }}
+              </td>
+              <td>
+                <div style="font-weight: 700; color: var(--color-text-dark);">
+                  {{ order.display_customer_name }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--color-text-muted);">
+                  {{ order.phone_number }}
+                </div>
+              </td>
+              <td style="font-size: 0.88rem; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {% for item in order.items %}
+                  {{ item.quantity }}x {{ item.item_name }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+              </td>
+              <td style="font-weight: 800; color: var(--color-accent);">
+                ${{ "%.2f"|format(order.total_amount) }}
+              </td>
+              <td>
+                {% set s = order.status|upper %}
+                {% if s == 'PLACED' %}
+                  <span class="badge badge-status-placed">Placed</span>
+                {% elif s == 'CONFIRMED' %}
+                  <span class="badge badge-status-confirmed">Confirmed</span>
+                {% elif s == 'PREPARING' %}
+                  <span class="badge badge-status-preparing">Preparing</span>
+                {% elif s == 'OUT FOR DELIVERY' %}
+                  <span class="badge badge-status-out-for-delivery">Out for Delivery</span>
+                {% elif s == 'DELIVERED' %}
+                  <span class="badge badge-status-delivered">Delivered</span>
+                {% elif s == 'CANCELLED' %}
+                  <span class="badge badge-status-cancelled">Cancelled</span>
+                {% else %}
+                  <span class="badge badge-accent">{{ order.status }}</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right;">
+                <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline">
+                  Inspect &rarr;
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
+              No customer orders recorded yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

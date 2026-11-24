@@ -1,0 +1,147 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Manage Orders – CraveCart{% endblock %}
+{% block header_title %}Customer Order Fulfillment{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <h3 style="font-size: 1.35rem; color: var(--color-primary-dark); font-weight: 800; margin: 0 0 0.35rem 0;">
+    Customer Orders Portal
+  </h3>
+  <p style="color: var(--color-text-muted); font-size: 0.92rem; margin: 0;">
+    Review incoming dining orders, verify customer delivery coordinates, and transition kitchen/dispatch statuses.
+  </p>
+</div>
+
+<!-- Search & Status Filter Section -->
+<div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+  <form method="GET" action="{{ url_for('admin.orders') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+    {% if status_filter %}
+      <input type="hidden" name="status" value="{{ status_filter }}">
+    {% endif %}
+
+    <div style="flex: 1; min-width: 260px;">
+      <input type="text" 
+             name="q" 
+             value="{{ search_query }}" 
+             placeholder="Search by Order ID (#12), Tracking Number (CRV-...), Customer Name, or Phone..." 
+             class="form-control" 
+             style="margin: 0;">
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+      Search Orders
+    </button>
+
+    {% if search_query or status_filter %}
+      <a href="{{ url_for('admin.orders') }}" class="btn btn-outline" style="white-space: nowrap;">
+        Reset Filters
+      </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Status Filter Tabs -->
+<div class="status-pills-bar">
+  <a href="{{ url_for('admin.orders', q=search_query if search_query else None) }}" 
+     class="status-pill-btn {% if not status_filter %}active{% endif %}">
+    <span>All Orders</span>
+    <span class="pill-counter">{{ orders|length if not status_filter else (status_counts.values()|sum) }}</span>
+  </a>
+
+  {% for st in all_statuses %}
+    <a href="{{ url_for('admin.orders', status=st, q=search_query if search_query else None) }}" 
+       class="status-pill-btn {% if status_filter == st %}active{% endif %}">
+      <span>{{ st|title }}</span>
+      <span class="pill-counter">{{ status_counts[st] }}</span>
+    </a>
+  {% endfor %}
+</div>
+
+<!-- Orders Table -->
+<div class="admin-table-container">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Order Code / ID</th>
+        <th>Date &amp; Time</th>
+        <th>Recipient &amp; Contact</th>
+        <th>Address Preview</th>
+        <th>Dishes</th>
+        <th>Total Amount</th>
+        <th>Status</th>
+        <th style="text-align: right;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if orders %}
+        {% for order in orders %}
+          <tr>
+            <td>
+              <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" style="font-weight: 800; color: var(--color-primary-dark); font-size: 0.95rem;">
+                {{ order.order_number or ('#%d'|format(order.id)) }}
+              </a>
+              <div style="font-size: 0.78rem; color: var(--color-text-muted);">
+                ID: #{{ order.id }}
+              </div>
+            </td>
+            <td style="color: var(--color-text-muted); font-size: 0.85rem; white-space: nowrap;">
+              {{ order.created_at.strftime('%b %d, %Y') }}<br>
+              {{ order.created_at.strftime('%I:%M %p') }}
+            </td>
+            <td>
+              <div style="font-weight: 700; color: var(--color-text-dark);">
+                {{ order.display_customer_name }}
+              </div>
+              <div style="font-size: 0.82rem; color: var(--color-text-muted);">
+                {{ order.phone_number }}
+              </div>
+            </td>
+            <td style="font-size: 0.85rem; color: var(--color-text-muted); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ order.delivery_address }}
+            </td>
+            <td style="font-size: 0.85rem; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {% for item in order.items %}
+                {{ item.quantity }}x {{ item.item_name }}{% if not loop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+            <td style="font-weight: 800; color: var(--color-accent); font-size: 1.05rem; white-space: nowrap;">
+              ${{ "%.2f"|format(order.total_amount) }}
+            </td>
+            <td>
+              {% set s = order.status|upper %}
+              {% if s == 'PLACED' %}
+                <span class="badge badge-status-placed">Placed</span>
+              {% elif s == 'CONFIRMED' %}
+                <span class="badge badge-status-confirmed">Confirmed</span>
+              {% elif s == 'PREPARING' %}
+                <span class="badge badge-status-preparing">Preparing</span>
+              {% elif s == 'OUT FOR DELIVERY' %}
+                <span class="badge badge-status-out-for-delivery">Out for Delivery</span>
+              {% elif s == 'DELIVERED' %}
+                <span class="badge badge-status-delivered">Delivered</span>
+              {% elif s == 'CANCELLED' %}
+                <span class="badge badge-status-cancelled">Cancelled</span>
+              {% else %}
+                <span class="badge badge-accent">{{ order.status }}</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline">
+                Fulfill &rarr;
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 3.5rem 1rem; color: var(--color-text-muted);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+            No orders found matching your search or status filter.
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

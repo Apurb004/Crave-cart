@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed – CraveCart{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 2rem auto;">
+  <div class="card" style="padding: 3rem 2.5rem; text-align: center;">
+    <!-- Success Icon -->
+    <div style="width: 72px; height: 72px; border-radius: 50%; background-color: #E8F5E9; color: #2E7D32; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; font-size: 2.2rem;">
+      ✓
+    </div>
+
+    <span class="badge badge-status-placed" style="font-size: 0.85rem; padding: 0.35rem 0.9rem; margin-bottom: 0.75rem;">
+      Order Status: {{ order.status }}
+    </span>
+
+    <h1 style="font-size: 2.2rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 0.5rem;">
+      Thank You for Your Order!
+    </h1>
+    <p style="color: var(--color-text-muted); font-size: 1.05rem; margin-bottom: 2rem;">
+      Your order has been safely placed with our kitchen. Our culinary team is reviewing the preparation queue.
+    </p>
+
+    <!-- Key Metadata Box -->
+    <div style="background-color: var(--color-bg-cream); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1.5rem; text-align: left; margin-bottom: 2rem;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+        <div>
+          <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Order Identifier</span>
+          <div style="font-weight: 800; font-size: 1.1rem; color: var(--color-primary-dark);">
+            {{ order.order_number or ('CRV-%04d'|format(order.id)) }}
+          </div>
+        </div>
+        <div>
+          <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Internal Order ID</span>
+          <div style="font-weight: 800; font-size: 1.1rem; color: var(--color-accent);">
+            #{{ order.id }}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+        <div>
+          <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Recipient</span>
+          <div style="font-weight: 600; color: var(--color-text-dark);">
+            {{ order.display_customer_name }}
+          </div>
+          <div style="font-size: 0.88rem; color: var(--color-text-muted);">{{ order.phone_number }}</div>
+        </div>
+        <div>
+          <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Payment Modality</span>
+          <div style="font-weight: 700; color: var(--color-primary-dark);">
+            {{ order.payment_method }}
+          </div>
+          <div style="font-size: 0.88rem; color: #2E7D32; font-weight: 600;">Pay ${{ "%.2f"|format(order.total_amount) }} on arrival</div>
+        </div>
+      </div>
+
+      <div>
+        <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Delivery Destination</span>
+        <div style="color: var(--color-text-dark); font-size: 0.95rem; line-height: 1.4;">
+          {{ order.delivery_address }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Itemized Table Snapshot -->
+    <div style="text-align: left; margin-bottom: 2rem;">
+      <h3 style="font-size: 1.1rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 0.75rem;">
+        Ordered Dishes
+      </h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.92rem;">
+        <tbody>
+          {% for item in order.items %}
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td style="padding: 0.6rem 0; font-weight: 600;">
+                {{ item.quantity }}x {{ item.item_name }}
+              </td>
+              <td style="padding: 0.6rem 0; text-align: right; font-weight: 700; color: var(--color-accent);">
+                ${{ "%.2f"|format(item.subtotal) }}
+              </td>
+            </tr>
+          {% endfor %}
+          <tr>
+            <td style="padding: 0.8rem 0; font-weight: 800; font-size: 1.05rem; color: var(--color-primary-dark);">
+              Total Amount
+            </td>
+            <td style="padding: 0.8rem 0; text-align: right; font-weight: 800; font-size: 1.25rem; color: var(--color-accent);">
+              ${{ "%.2f"|format(order.total_amount) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('customer.order_detail', order_id=order.id) }}" class="btn btn-accent btn-lg">
+        Track Order Timeline &rarr;
+      </a>
+      <a href="{{ url_for('customer.order_history') }}" class="btn btn-outline btn-lg">
+        View Order History
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

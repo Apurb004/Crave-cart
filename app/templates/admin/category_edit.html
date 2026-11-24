@@ -1,0 +1,47 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Edit Category: {{ category.name }}{% endblock %}
+{% block header_title %}Edit Menu Category{% endblock %}
+
+{% block content %}
+<div style="max-width: 560px; margin: 0 auto;">
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('admin.categories') }}" style="color: var(--color-text-muted); font-size: 0.9rem; font-weight: 600;">
+      &larr; Back to Categories List
+    </a>
+  </div>
+
+  <div class="card" style="padding: 2.25rem 2rem;">
+    <h2 style="font-size: 1.5rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 1.5rem;">
+      Edit Category: {{ category.name }}
+    </h2>
+
+    <form method="POST" action="{{ url_for('admin.category_edit', cat_id=category.id) }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+        {% for error in form.name.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.description.label(class="form-label") }}
+        {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else "")) }}
+        {% for error in form.description.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top: 1.75rem; display: flex; gap: 1rem;">
+        {{ form.submit(class="btn btn-primary btn-block") }}
+        <a href="{{ url_for('admin.categories') }}" class="btn btn-outline" style="flex: 1; text-align: center;">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% from 'components/_food_card.html' import render_food_card %}
+
+{% block title %}{{ item.name }} – CraveCart{% endblock %}
+
+{% block content %}
+<!-- Breadcrumbs -->
+<nav style="margin-bottom: 1.5rem; font-size: 0.92rem; color: var(--color-text-muted);">
+  <a href="{{ url_for('customer.index') }}" style="color: var(--color-text-muted);">Home</a>
+  <span style="margin: 0 0.5rem;">/</span>
+  <a href="{{ url_for('customer.menu') }}" style="color: var(--color-text-muted);">Menu</a>
+  <span style="margin: 0 0.5rem;">/</span>
+  {% if item.category %}
+    <a href="{{ url_for('customer.menu', category=item.category.id) }}" style="color: var(--color-text-muted);">{{ item.category.name }}</a>
+    <span style="margin: 0 0.5rem;">/</span>
+  {% endif %}
+  <span style="color: var(--color-primary-dark); font-weight: 600;">{{ item.name }}</span>
+</nav>
+
+<!-- Detailed Food Card Layout -->
+<div class="food-detail-card">
+  <div class="food-detail-img-wrapper">
+    <img src="{{ item.image_url or url_for('static', filename='images/food-placeholder.svg') }}" 
+         alt="{{ item.name }}" 
+         class="food-detail-img"
+         onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/food-placeholder.svg') }}';">
+  </div>
+
+  <div class="food-detail-info">
+    <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.75rem;">
+      <span class="badge badge-accent">
+        {{ item.category.name if item.category else 'Chef Special' }}
+      </span>
+      {% if item.is_available %}
+        <span class="badge badge-in-stock">In Stock & Ready</span>
+      {% else %}
+        <span class="badge badge-out-of-stock">Currently Sold Out</span>
+      {% endif %}
+    </div>
+
+    <h1 style="font-size: 2.3rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 0.75rem; line-height: 1.2;">
+      {{ item.name }}
+    </h1>
+
+    <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-accent); margin-bottom: 1.5rem;">
+      ${{ "%.2f"|format(item.price) }}
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 0.4rem;">
+        Culinary Description
+      </h3>
+      <p style="color: var(--color-text-dark); line-height: 1.7; font-size: 1.05rem;">
+        {{ item.description or 'A mouthwatering culinary creation prepared by our in-house chefs using fresh, locally sourced ingredients.' }}
+      </p>
+    </div>
+
+    <!-- Add to Cart Form -->
+    {% if item.is_available %}
+      <form action="{{ url_for('customer.add_to_cart', item_id=item.id) }}" method="POST" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="quantity-stepper">
+          <button type="button" class="quantity-btn" onclick="stepQuantity(-1)" aria-label="Decrease quantity">&minus;</button>
+          <input type="number" id="detailQuantity" name="quantity" value="1" min="1" max="20" class="quantity-input" aria-label="Order quantity">
+          <button type="button" class="quantity-btn" onclick="stepQuantity(1)" aria-label="Increase quantity">&plus;</button>
+        </div>
+
+        <button type="submit" class="btn btn-accent btn-lg" style="flex: 1; min-width: 200px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span>Add to Cart</span>
+        </button>
+      </form>
+    {% else %}
+      <div class="alert alert-warning" style="margin-bottom: 0;">
+        <span>This dish is temporarily unavailable. Please browse other offerings from our menu.</span>
+      </div>
+    {% endif %}
+
+    <div style="margin-top: 1.75rem; border-top: 1px solid var(--color-border); padding-top: 1.25rem;">
+      <a href="{{ url_for('customer.menu') }}" style="color: var(--color-primary-dark); font-weight: 600; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+        &larr; Back to Full Menu
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Related Category Dishes -->
+{% if related_items %}
+<section style="margin-top: 3.5rem;">
+  <div style="margin-bottom: 1.5rem;">
+    <span class="badge badge-accent" style="margin-bottom: 0.35rem;">More From This Category</span>
+    <h2 style="font-size: 1.7rem; color: var(--color-primary-dark); font-weight: 800;">
+      You Might Also Crave
+    </h2>
+  </div>
+  <div class="food-grid">
+    {% for related in related_items %}
+      {{ render_food_card(related) }}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function stepQuantity(delta) {
+    const input = document.getElementById('detailQuantity');
+    if (!input) return;
+    let val = parseInt(input.value) || 1;
+    val = Math.max(1, Math.min(20, val + delta));
+    input.value = val;
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% from 'components/_food_card.html' import render_food_card %}
+
+{% block title %}CraveCart – Gourmet Artisanal Online Food Ordering{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div style="max-width: 680px; position: relative; z-index: 2;">
+    <span class="badge badge-accent" style="margin-bottom: 1.25rem;">
+      Authentic Single-Kitchen Dining
+    </span>
+    <h1 class="hero-title">
+      Exceptional Taste,<br>
+      <span style="color: #F8B195;">Crafted With Pure Passion.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Fresh culinary creations prepared upon ordering by our master chefs. 
+      Enjoy quick, contactless dispatch with convenient Cash on Delivery.
+    </p>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+      <a href="{{ url_for('customer.menu') }}" class="btn btn-accent btn-lg">
+        Explore Full Menu &rarr;
+      </a>
+      <a href="#about" class="btn btn-outline btn-lg" style="color: #FAF7F2; border-color: rgba(250, 247, 242, 0.4);">
+        Our Story
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Restaurant Introduction Section -->
+<section id="about" style="margin-bottom: 4rem;">
+  <div style="text-align: center; max-width: 720px; margin: 0 auto 2.5rem auto;">
+    <span class="badge badge-accent" style="margin-bottom: 0.5rem;">The CraveCart Promise</span>
+    <h2 style="font-size: 2.2rem; color: var(--color-primary-dark); margin-bottom: 0.75rem; font-weight: 800;">
+      Artisanal Kitchen, Honest Ingredients
+    </h2>
+    <p style="color: var(--color-text-muted); font-size: 1.05rem;">
+      We believe that great food begins with respect for ingredients. From our slow-fermented pizza doughs to our slow-simmered sauces, everything is cooked in-house daily.
+    </p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-box">
+      <div class="feature-icon-circle">🌿</div>
+      <h3 style="font-size: 1.2rem; color: var(--color-primary-dark); margin-bottom: 0.5rem;">Farm-to-Table Fresh</h3>
+      <p style="color: var(--color-text-muted); font-size: 0.92rem;">
+        We source our greens, herbs, and meats directly from sustainable regional farms every morning.
+      </p>
+    </div>
+
+    <div class="feature-box">
+      <div class="feature-icon-circle">👨‍🍳</div>
+      <h3 style="font-size: 1.2rem; color: var(--color-primary-dark); margin-bottom: 0.5rem;">Master Chef Crafted</h3>
+      <p style="color: var(--color-text-muted); font-size: 0.92rem;">
+        Every recipe is refined with precision, balancing authentic global traditions with vibrant modern twists.
+      </p>
+    </div>
+
+    <div class="feature-box">
+      <div class="feature-icon-circle">💵</div>
+      <h3 style="font-size: 1.2rem; color: var(--color-primary-dark); margin-bottom: 0.5rem;">Cash on Delivery</h3>
+      <p style="color: var(--color-text-muted); font-size: 0.92rem;">
+        Pay comfortably at your doorstep when your meal arrives hot and fresh. No online card hassles.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Categories Overview -->
+{% if categories %}
+<section style="margin-bottom: 4rem;">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <span class="badge badge-accent" style="margin-bottom: 0.35rem;">Menu Sections</span>
+      <h2 style="font-size: 1.9rem; color: var(--color-primary-dark); font-weight: 800;">
+        Explore by Category
+      </h2>
+    </div>
+    <a href="{{ url_for('customer.menu') }}" style="font-size: 0.95rem; font-weight: 700; color: var(--color-accent); display: inline-flex; align-items: center; gap: 0.3rem;">
+      View All Categories &rarr;
+    </a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem;">
+    {% for cat in categories %}
+      <a href="{{ url_for('customer.menu', category=cat.id) }}" class="card" style="padding: 1.5rem; text-decoration: none; border-radius: var(--radius-md); transition: var(--transition);">
+        <h3 style="font-size: 1.15rem; color: var(--color-primary-dark); margin-bottom: 0.35rem;">{{ cat.name }}</h3>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 0.85rem;">
+          {{ cat.description or 'Explore delicious dishes in this category.' }}
+        </p>
+        <span style="font-size: 0.85rem; font-weight: 700; color: var(--color-accent);">Browse category &rarr;</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Featured Dishes -->
+<section style="margin-bottom: 3.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <span class="badge badge-accent" style="margin-bottom: 0.35rem;">Popular Selections</span>
+      <h2 style="font-size: 1.9rem; color: var(--color-primary-dark); font-weight: 800;">
+        Chef's Featured Dishes
+      </h2>
+    </div>
+    <span style="font-size: 0.92rem; color: var(--color-text-muted); font-weight: 600;">
+      Prepared Fresh to Order
+    </span>
+  </div>
+
+  {% if featured_items %}
+    <div class="food-grid">
+      {% for item in featured_items %}
+        {{ render_food_card(item) }}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+      <h3 style="color: var(--color-text-muted); margin-bottom: 0.5rem;">No menu items available yet</h3>
+      <p style="color: var(--color-text-light); font-size: 0.95rem;">Please check back shortly or run <code>flask seed-db</code>.</p>
+    </div>
+  {% endif %}
+
+  <div style="text-align: center; margin-top: 3rem;">
+    <a href="{{ url_for('customer.menu') }}" class="btn btn-primary btn-lg">
+      Browse Complete Menu Catalog &rarr;
+    </a>
+  </div>
+</section>
+{% endblock %}

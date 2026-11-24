@@ -1,0 +1,46 @@
+{# Reusable food card macro for catalog, homepage, and recommendations #}
+{% macro render_food_card(item) %}
+<div class="food-card">
+  <div class="food-card-img-wrapper">
+    <a href="{{ url_for('customer.food_detail', item_id=item.id) }}" aria-label="{{ item.name }}">
+      <img src="{{ item.image_url or url_for('static', filename='images/food-placeholder.svg') }}" 
+           alt="{{ item.name }}" 
+           class="food-card-img"
+           loading="lazy"
+           onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/food-placeholder.svg') }}';">
+    </a>
+    <div style="position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; z-index: 2;">
+      {% if not item.is_available %}
+        <span class="badge badge-out-of-stock" style="box-shadow: 0 2px 6px rgba(0,0,0,0.15);">Sold Out</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="food-card-body">
+    <span class="food-card-category">{{ item.category.name if item.category else 'Chef Special' }}</span>
+    <h3 class="food-card-title">
+      <a href="{{ url_for('customer.food_detail', item_id=item.id) }}">{{ item.name }}</a>
+    </h3>
+    <p class="food-card-desc">{{ item.description or 'A mouthwatering culinary specialty prepared fresh to order.' }}</p>
+    <div class="food-card-footer">
+      <div>
+        <span class="food-price">${{ "%.2f"|format(item.price) }}</span>
+      </div>
+      <div>
+        {% if item.is_available %}
+          <form action="{{ url_for('customer.add_to_cart', item_id=item.id) }}" method="POST" style="margin: 0; display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn btn-sm btn-accent" title="Add to cart">
+              + Add to Cart
+            </button>
+          </form>
+        {% else %}
+          <button class="btn btn-sm btn-outline" disabled style="cursor: not-allowed; opacity: 0.65;">
+            Unavailable
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}

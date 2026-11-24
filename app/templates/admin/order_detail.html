@@ -1,0 +1,198 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Order {{ order.order_number or ('#%d'|format(order.id)) }} Audit – CraveCart{% endblock %}
+{% block header_title %}Order Inspection &amp; Status Transition{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <a href="{{ url_for('admin.orders') }}" style="color: var(--color-text-muted); font-size: 0.9rem; font-weight: 600;">
+    &larr; Back to Orders Management
+  </a>
+
+  <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <h1 style="font-size: 2.2rem; color: var(--color-primary-dark); font-weight: 800; margin: 0;">
+          {{ order.order_number or ('CRV-%04d'|format(order.id)) }}
+        </h1>
+        {% set s = order.status|upper %}
+        {% if s == 'PLACED' %}
+          <span class="badge badge-status-placed" style="font-size: 0.9rem; padding: 0.35rem 0.9rem;">Placed</span>
+        {% elif s == 'CONFIRMED' %}
+          <span class="badge badge-status-confirmed" style="font-size: 0.9rem; padding: 0.35rem 0.9rem;">Confirmed</span>
+        {% elif s == 'PREPARING' %}
+          <span class="badge badge-status-preparing" style="font-size: 0.9rem; padding: 0.35rem 0.9rem;">Preparing</span>
+        {% elif s == 'OUT FOR DELIVERY' %}
+          <span class="badge badge-status-out-for-delivery" style="font-size: 0.9rem; padding: 0.35rem 0.9rem;">Out for Delivery</span>
+        {% elif s == 'DELIVERED' %}
+          <span class="badge badge-status-delivered" style="font-size: 0.9rem; padding: 0.35rem 0.9rem;">Delivered</span>
+        {% elif s == 'CANCELLED' %}
+          <span class="badge badge-status-cancelled" style="font-size: 0.9rem; padding: 0.35rem 0.9rem;">Cancelled</span>
+        {% else %}
+          <span class="badge badge-accent">{{ order.status }}</span>
+        {% endif %}
+      </div>
+      <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0.35rem 0 0 0;">
+        Internal ID: #{{ order.id }} &bull; Placed on {{ order.created_at.strftime('%A, %B %d, %Y at %I:%M %p') }}
+      </p>
+    </div>
+
+    <div style="font-size: 1.85rem; font-weight: 800; color: var(--color-accent);">
+      ${{ "%.2f"|format(order.total_amount) }}
+    </div>
+  </div>
+</div>
+
+<!-- ===========================================================================
+     STATUS TRANSITION CONTROL BOX
+     =========================================================================== -->
+<div class="card" style="padding: 1.75rem; margin-bottom: 2rem; border-left: 5px solid var(--color-primary-medium);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h3 style="font-size: 1.15rem; color: var(--color-primary-dark); font-weight: 800; margin: 0 0 0.35rem 0;">
+        Fulfillment Stage Transition
+      </h3>
+      <p style="color: var(--color-text-muted); font-size: 0.88rem; margin: 0;">
+        Current Status: <strong>{{ order.status }}</strong>
+      </p>
+    </div>
+
+    <div>
+      {% if allowed_transitions %}
+        <form method="POST" action="{{ url_for('admin.order_update_status', order_id=order.id) }}" style="display: flex; gap: 0.75rem; align-items: center; margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          
+          <select name="status" class="form-control" style="width: auto; min-width: 200px; margin: 0;" required>
+            <option value="" disabled selected>Select Next Status...</option>
+            {% for target in allowed_transitions %}
+              <option value="{{ target }}">Advance to: {{ target }}</option>
+            {% endfor %}
+          </select>
+
+          <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+            Update Status
+          </button>
+        </form>
+      {% else %}
+        <div class="badge {% if order.status|upper == 'DELIVERED' %}badge-status-delivered{% else %}badge-status-cancelled{% endif %}" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+          Terminal State – No further transitions allowed
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--color-border); font-size: 0.82rem; color: var(--color-text-muted);">
+    <strong>Enforced Workflow Rules:</strong> 
+    <code>PLACED &rarr; CONFIRMED / CANCELLED</code> &bull; 
+    <code>CONFIRMED &rarr; PREPARING / CANCELLED</code> &bull; 
+    <code>PREPARING &rarr; OUT FOR DELIVERY</code> &bull; 
+    <code>OUT FOR DELIVERY &rarr; DELIVERED</code>
+  </div>
+</div>
+
+<!-- ===========================================================================
+     ORDER AUDIT DETAILS & CUSTOMER CONTACT
+     =========================================================================== -->
+<div class="admin-split-layout">
+  <!-- Itemized Snapshot Table -->
+  <div class="card" style="padding: 1.75rem;">
+    <h3 style="font-size: 1.25rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 1.25rem;">
+      Itemized Bill (Snapshot)
+    </h3>
+
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--color-border); color: var(--color-text-muted); font-size: 0.82rem; text-transform: uppercase;">
+          <th style="padding: 0.65rem 0.5rem; text-align: left;">Dish Title</th>
+          <th style="padding: 0.65rem 0.5rem; text-align: center;">Price</th>
+          <th style="padding: 0.65rem 0.5rem; text-align: center;">Qty</th>
+          <th style="padding: 0.65rem 0.5rem; text-align: right;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items %}
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 0.85rem 0.5rem; font-weight: 700; color: var(--color-primary-dark);">
+              {{ item.item_name }}
+            </td>
+            <td style="padding: 0.85rem 0.5rem; text-align: center; color: var(--color-text-muted);">
+              ${{ "%.2f"|format(item.unit_price) }}
+            </td>
+            <td style="padding: 0.85rem 0.5rem; text-align: center; font-weight: 700;">
+              {{ item.quantity }}
+            </td>
+            <td style="padding: 0.85rem 0.5rem; text-align: right; font-weight: 800; color: var(--color-accent);">
+              ${{ "%.2f"|format(item.subtotal) }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="margin-top: 1.5rem; border-top: 2px solid var(--color-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+      <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: var(--color-text-muted);">
+        <span>Payment Method</span>
+        <span style="font-weight: 700; color: var(--color-primary-dark);">{{ order.payment_method }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: var(--color-text-muted);">
+        <span>Delivery Fee</span>
+        <span style="font-weight: 700; color: #2E7D32;">FREE</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 1.15rem; font-weight: 800; color: var(--color-primary-dark); margin-top: 0.5rem;">
+        <span>Final Payable Total</span>
+        <span style="font-size: 1.7rem; color: var(--color-accent);">${{ "%.2f"|format(order.total_amount) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Delivery & Contact Coordinates -->
+  <div class="card" style="padding: 1.75rem;">
+    <h3 style="font-size: 1.25rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 1.25rem;">
+      Customer Delivery Details
+    </h3>
+
+    <div style="margin-bottom: 1.25rem;">
+      <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Customer / Recipient</span>
+      <div style="font-weight: 700; color: var(--color-text-dark); font-size: 1.05rem;">
+        {{ order.display_customer_name }}
+      </div>
+      {% if order.user %}
+        <div style="font-size: 0.85rem; color: var(--color-text-muted);">
+          Account: {{ order.user.email }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div style="margin-bottom: 1.25rem;">
+      <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Phone Number</span>
+      <div style="font-weight: 700; color: var(--color-text-dark); font-size: 1rem;">
+        <a href="tel:{{ order.phone_number }}" style="color: inherit; text-decoration: underline;">
+          {{ order.phone_number }}
+        </a>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 1.25rem;">
+      <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Street Address</span>
+      <div style="color: var(--color-text-dark); font-size: 0.95rem; line-height: 1.5; background-color: var(--color-bg-cream); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 0.85rem;">
+        {{ order.delivery_address }}
+      </div>
+    </div>
+
+    {% if order.order_notes %}
+      <div style="margin-bottom: 1.25rem;">
+        <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Delivery Notes</span>
+        <div style="font-style: italic; color: var(--color-text-muted); font-size: 0.9rem; padding: 0.5rem 0;">
+          "{{ order.order_notes }}"
+        </div>
+      </div>
+    {% endif %}
+
+    <div style="border-top: 1px solid var(--color-border); padding-top: 1.25rem;">
+      <a href="{{ url_for('admin.orders') }}" class="btn btn-outline btn-block">
+        &larr; Back to Orders Management
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

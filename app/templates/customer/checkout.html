@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout – CraveCart{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <!-- Breadcrumb -->
+  <nav style="margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--color-text-muted);">
+    <a href="{{ url_for('customer.view_cart') }}" style="color: var(--color-text-muted);">&larr; Back to Cart</a>
+  </nav>
+
+  <span class="badge badge-accent" style="margin-bottom: 0.5rem;">Secure Checkout</span>
+  <h1 style="font-size: 2.3rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 0.5rem;">
+    Delivery Details & Final Confirmation
+  </h1>
+  <p style="color: var(--color-text-muted);">
+    Please confirm where and to whom our courier should deliver your freshly prepared meal.
+  </p>
+</div>
+
+<div class="checkout-layout">
+  <!-- Left Column: Delivery Coordinates Form -->
+  <div class="card" style="padding: 2.25rem 2rem;">
+    <h2 style="font-size: 1.35rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+      <span>Delivery Information</span>
+    </h2>
+
+    <form method="POST" action="{{ url_for('customer.checkout') }}" novalidate id="checkoutForm">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        {{ form.customer_name.label(class="form-label") }}
+        {{ form.customer_name(class="form-control" + (" is-invalid" if form.customer_name.errors else "")) }}
+        {% for error in form.customer_name.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.phone_number.label(class="form-label") }}
+        {{ form.phone_number(class="form-control" + (" is-invalid" if form.phone_number.errors else "")) }}
+        <small style="display: block; font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.25rem;">
+          Courier will call this number upon arrival at your doorstep.
+        </small>
+        {% for error in form.phone_number.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.delivery_address.label(class="form-label") }}
+        {{ form.delivery_address(class="form-control" + (" is-invalid" if form.delivery_address.errors else "")) }}
+        {% for error in form.delivery_address.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.order_notes.label(class="form-label") }}
+        {{ form.order_notes(class="form-control" + (" is-invalid" if form.order_notes.errors else "")) }}
+        {% for error in form.order_notes.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Payment Modality Box -->
+      <div style="background-color: var(--color-bg-cream); border: 2px solid var(--color-primary-medium); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; font-weight: 800; color: var(--color-primary-dark); font-size: 1.05rem;">
+            <span>💵</span>
+            <span>Cash on Delivery (COD)</span>
+          </div>
+          <span class="badge badge-in-stock">Selected</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--color-text-muted); line-height: 1.4; margin: 0;">
+          No advance payment required. Please pay the delivery courier in cash when your food package is handed over.
+        </p>
+      </div>
+
+      <div>
+        {{ form.submit(class="btn btn-accent btn-block btn-lg", id="placeOrderBtn") }}
+      </div>
+    </form>
+  </div>
+
+  <!-- Right Column: Itemized Order Summary -->
+  <div class="card" style="padding: 1.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
+      <h3 style="font-size: 1.25rem; color: var(--color-primary-dark); font-weight: 800;">
+        Order Items ({{ total_quantity }})
+      </h3>
+      <a href="{{ url_for('customer.view_cart') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--color-accent);">Edit Cart</a>
+    </div>
+
+    <!-- Items list -->
+    <div style="display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.5rem;">
+      {% for entry in cart_items %}
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.95rem;">
+          <div style="flex: 1; padding-right: 1rem;">
+            <span style="font-weight: 700; color: var(--color-primary-dark);">{{ entry.quantity }}x</span>
+            <span style="color: var(--color-text-dark); margin-left: 0.25rem;">{{ entry.item.name }}</span>
+            <div style="font-size: 0.8rem; color: var(--color-text-muted);">${{ "%.2f"|format(entry.unit_price) }} each</div>
+          </div>
+          <div style="font-weight: 700; color: var(--color-text-dark); white-space: nowrap;">
+            ${{ "%.2f"|format(entry.subtotal) }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div style="border-top: 1px solid var(--color-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.95rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>Items Subtotal</span>
+        <span style="font-weight: 700; color: var(--color-text-dark);">${{ "%.2f"|format(total_amount) }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span>Delivery Fee</span>
+        <span style="font-weight: 700; color: #2E7D32;">FREE</span>
+      </div>
+    </div>
+
+    <div style="border-top: 2px solid var(--color-border); padding-top: 1rem; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem;">
+      <span style="font-size: 1.1rem; font-weight: 800; color: var(--color-primary-dark);">Total Payable</span>
+      <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-accent);">${{ "%.2f"|format(total_amount) }}</span>
+    </div>
+
+    <div style="background-color: var(--color-surface-elevated); border-radius: var(--radius-sm); padding: 0.85rem; font-size: 0.85rem; color: var(--color-text-muted); text-align: center;">
+      🔒 Encrypted session verification &bull; Real-time kitchen queueing
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Prevent accidental duplicate submissions
+  const checkoutForm = document.getElementById('checkoutForm');
+  const placeOrderBtn = document.getElementById('placeOrderBtn');
+  if (checkoutForm && placeOrderBtn) {
+    checkoutForm.addEventListener('submit', () => {
+      placeOrderBtn.disabled = true;
+      placeOrderBtn.innerText = 'Transmitting Order to Kitchen...';
+    });
+  }
+</script>
+{% endblock %}

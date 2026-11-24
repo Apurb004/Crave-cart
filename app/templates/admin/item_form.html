@@ -1,0 +1,81 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ title }} – CraveCart{% endblock %}
+{% block header_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('admin.items') }}" style="color: var(--color-text-muted); font-size: 0.9rem; font-weight: 600;">
+      &larr; Back to Food Inventory
+    </a>
+  </div>
+
+  <div class="card" style="padding: 2.5rem 2rem;">
+    <h2 style="font-size: 1.5rem; color: var(--color-primary-dark); font-weight: 800; margin-bottom: 1.5rem;">
+      {{ title }}
+    </h2>
+
+    <form method="POST" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+        {% for error in form.name.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+        <div class="form-group">
+          {{ form.category_id.label(class="form-label") }}
+          {{ form.category_id(class="form-control" + (" is-invalid" if form.category_id.errors else "")) }}
+          {% for error in form.category_id.errors %}
+            <span class="form-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          {{ form.price.label(class="form-label") }}
+          {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else "")) }}
+          {% for error in form.price.errors %}
+            <span class="form-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        {{ form.description.label(class="form-label") }}
+        {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else "")) }}
+        {% for error in form.description.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.image_url.label(class="form-label") }}
+        {{ form.image_url(class="form-control" + (" is-invalid" if form.image_url.errors else "")) }}
+        <small style="display: block; font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.25rem;">
+          Provide an external image link (e.g. Unsplash) or leave blank to use the default artisanal SVG placeholder.
+        </small>
+        {% for error in form.image_url.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-check" style="margin-top: 1.25rem; margin-bottom: 1.75rem;">
+        {{ form.is_available(class="form-check-input") }}
+        {{ form.is_available.label(class="form-check-label") }}
+      </div>
+
+      <div style="display: flex; gap: 1rem; border-top: 1px solid var(--color-border); padding-top: 1.5rem;">
+        {{ form.submit(class="btn btn-primary btn-lg", style="flex: 1.5;") }}
+        <a href="{{ url_for('admin.items') }}" class="btn btn-outline btn-lg" style="flex: 1; text-align: center;">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
